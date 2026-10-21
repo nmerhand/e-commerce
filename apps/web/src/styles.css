@@ -78,6 +78,30 @@ select:focus-visible {
   font-size: 0.9rem;
 }
 
+.site-header nav,
+.account-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.account-nav {
+  color: #515a52;
+  font-size: 0.85rem;
+}
+
+.account-nav .text-button {
+  font-size: 0.82rem;
+}
+
+.site-alert {
+  margin: 1rem 0 0;
+  padding: 0.8rem 1rem;
+  background: #f8e9e6;
+  color: #8c382f;
+  font-size: 0.88rem;
+}
+
 .hero {
   display: grid;
   min-height: 390px;
@@ -464,6 +488,79 @@ select:focus-visible {
   font-size: 0.75rem;
 }
 
+.auth-page {
+  width: min(470px, 100%);
+  min-height: 65vh;
+  margin: 0 auto;
+  padding: 5rem 0;
+}
+
+.auth-page h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.5rem, 6vw, 3.8rem);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+}
+
+.auth-intro,
+.auth-switch {
+  color: #687169;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.auth-form {
+  display: grid;
+  gap: 1.15rem;
+  margin-top: 2rem;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.auth-form label > span {
+  color: #4e584f;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.auth-form input {
+  height: 48px;
+  padding: 0 0.85rem;
+  border: 1px solid #d9d8d0;
+  border-radius: 0;
+  background: #fff;
+}
+
+.auth-form small {
+  color: #747a73;
+  font-size: 0.75rem;
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 0.3rem;
+}
+
+.auth-submit:disabled {
+  cursor: progress;
+  opacity: 0.65;
+}
+
+.form-error {
+  margin: 0;
+  color: #9c3e35;
+  font-size: 0.86rem;
+}
+
+.auth-switch {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
 @media (max-width: 760px) {
   .hero {
     grid-template-columns: 1fr;
@@ -527,5 +624,14 @@ select:focus-visible {
 
   .site-footer {
     flex-direction: column;
+  }
+
+  .site-header nav,
+  .account-nav {
+    gap: 0.7rem;
+  }
+
+  .account-name {
+    display: none;
   }
 }
