@@ -25,4 +25,4 @@ erDiagram
 
 ## Données de démonstration
 
-`prisma/seed.ts` insère ou met à jour de façon répétable une catégorie et trois produits d'exemple. Le seed ne crée pas de compte administrateur et ne contient aucun mot de passe.
+`prisma/seed.ts` insère de façon répétable une catégorie et trois produits d'exemple sans écraser les valeurs déjà modifiées. Il peut aussi créer un administrateur si `ADMIN_EMAIL` et `ADMIN_PASSWORD` sont définis ; le mot de passe doit contenir au moins 12 caractères et est stocké avec Argon2id. Si l'adresse existe déjà, le seed ne modifie que son rôle et conserve son mot de passe actuel. Ces variables doivent être fournies uniquement dans l'environnement d'exécution et jamais ajoutées au dépôt.

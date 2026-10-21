@@ -1,0 +1,372 @@
+openapi: 3.1.0
+info:
+  title: Épure Store API
+  version: 1.0.0
+  description: API REST du catalogue, des comptes, paniers, commandes et fonctions d’administration.
+servers:
+  - url: http://localhost:3000
+tags:
+  - name: Health
+  - name: Catalog
+  - name: Auth
+  - name: Cart
+  - name: Orders
+  - name: Admin
+paths:
+  /api/health:
+    get:
+      tags: [Health]
+      responses:
+        "200":
+          description: API opérationnelle
+  /api/products/categories:
+    get:
+      tags: [Catalog]
+      responses:
+        "200":
+          description: Catégories visibles dans le catalogue
+  /api/products:
+    get:
+      tags: [Catalog]
+      parameters:
+        - in: query
+          name: query
+          schema: { type: string, maxLength: 100 }
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 50, default: 12 }
+      responses:
+        "200":
+          description: Page de produits
+        "400":
+          description: Paramètres invalides
+  /api/products/{slug}:
+    get:
+      tags: [Catalog]
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Détail du produit
+        "404":
+          description: Produit absent
+  /api/auth/csrf:
+    get:
+      tags: [Auth]
+      responses:
+        "200":
+          description: Jeton CSRF et cookie CSRF
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      description: Crée un compte client ; mot de passe d’au moins 12 caractères.
+      security: [{ CsrfToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, name, password]
+              properties:
+                email: { type: string, format: email, maxLength: 254 }
+                name: { type: string, minLength: 2, maxLength: 120 }
+                password: { type: string, minLength: 12, maxLength: 128 }
+      responses:
+        "201":
+          description: Compte créé et cookie de session défini
+        "400":
+          description: Données invalides
+        "409":
+          description: Adresse déjà utilisée
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      security: [{ CsrfToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email, maxLength: 254 }
+                password: { type: string, minLength: 1, maxLength: 128 }
+      responses:
+        "200":
+          description: Session créée et cookie défini
+        "401":
+          description: Identifiants invalides
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      security: [{ SessionCookie: [] }]
+      responses:
+        "200":
+          description: Utilisateur courant
+        "401":
+          description: Session requise
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      security: [{ SessionCookie: [], CsrfToken: [] }]
+      responses:
+        "204":
+          description: Session terminée
+  /api/cart:
+    get:
+      tags: [Cart]
+      security: [{ SessionCookie: [] }]
+      responses:
+        "200":
+          description: Panier du compte connecté
+        "401":
+          description: Session requise
+  /api/cart/items:
+    post:
+      tags: [Cart]
+      security: [{ SessionCookie: [], CsrfToken: [] }]
+      description: Ajoute une quantité d’un produit disponible (1 à 99).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId, quantity]
+              properties:
+                productId: { type: string, minLength: 1 }
+                quantity: { type: integer, minimum: 1, maximum: 99 }
+      responses:
+        "201":
+          description: Panier actualisé
+        "400":
+          description: Quantité invalide
+        "409":
+          description: Stock insuffisant
+  /api/cart/items/{productId}:
+    parameters:
+      - in: path
+        name: productId
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [Cart]
+      security: [{ SessionCookie: [], CsrfToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity]
+              properties:
+                quantity: { type: integer, minimum: 1, maximum: 99 }
+      responses:
+        "200":
+          description: Quantité actualisée
+        "409":
+          description: Stock insuffisant
+    delete:
+      tags: [Cart]
+      security: [{ SessionCookie: [], CsrfToken: [] }]
+      responses:
+        "200":
+          description: Produit retiré du panier
+  /api/orders:
+    get:
+      tags: [Orders]
+      security: [{ SessionCookie: [] }]
+      responses:
+        "200":
+          description: Historique du compte connecté
+    post:
+      tags: [Orders]
+      security: [{ SessionCookie: [], CsrfToken: [] }]
+      description: Crée une commande et simule un paiement ; aucun détail bancaire n’est accepté.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShippingAddress"
+      responses:
+        "201":
+          description: Commande créée et panier vidé
+        "400":
+          description: Panier vide ou adresse invalide
+        "409":
+          description: Stock insuffisant
+  /api/orders/{orderNumber}:
+    get:
+      tags: [Orders]
+      security: [{ SessionCookie: [] }]
+      parameters:
+        - in: path
+          name: orderNumber
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Détail appartenant au compte connecté
+        "404":
+          description: Commande absente
+  /api/admin/categories:
+    get:
+      tags: [Admin]
+      security: [{ SessionCookie: [] }]
+      responses:
+        "200":
+          description: Catégories, réservées aux administrateurs
+        "403":
+          description: Rôle administrateur requis
+  /api/admin/products:
+    get:
+      tags: [Admin]
+      security: [{ SessionCookie: [] }]
+      responses:
+        "200":
+          description: Catalogue complet, y compris les produits désactivés
+    post:
+      tags: [Admin]
+      security: [{ SessionCookie: [], CsrfToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+      responses:
+        "201":
+          description: Produit créé
+        "400":
+          description: Données invalides
+        "409":
+          description: Slug déjà utilisé
+  /api/admin/products/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
+    put:
+      tags: [Admin]
+      security: [{ SessionCookie: [], CsrfToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductUpdateInput"
+      responses:
+        "200":
+          description: Produit modifié
+        "404":
+          description: Produit absent
+    delete:
+      tags: [Admin]
+      security: [{ SessionCookie: [], CsrfToken: [] }]
+      description: Désactive le produit sans supprimer les références de commande.
+      responses:
+        "204":
+          description: Produit désactivé
+  /api/admin/orders:
+    get:
+      tags: [Admin]
+      security: [{ SessionCookie: [] }]
+      responses:
+        "200":
+          description: Jusqu’aux 200 commandes les plus récentes
+  /api/admin/orders/{orderNumber}/ship:
+    post:
+      tags: [Admin]
+      security: [{ SessionCookie: [], CsrfToken: [] }]
+      parameters:
+        - in: path
+          name: orderNumber
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Commande expédiée
+        "409":
+          description: La commande n’est pas en préparation
+components:
+  schemas:
+    ShippingAddress:
+      type: object
+      additionalProperties: false
+      required: [recipientName, addressLine1, postalCode, city, countryCode]
+      properties:
+        recipientName: { type: string, minLength: 2, maxLength: 120 }
+        addressLine1: { type: string, minLength: 3, maxLength: 200 }
+        addressLine2: { type: string, maxLength: 200 }
+        postalCode: { type: string, minLength: 3, maxLength: 20 }
+        city: { type: string, minLength: 2, maxLength: 120 }
+        countryCode: { type: string, minLength: 2, maxLength: 2 }
+    ProductInput:
+      type: object
+      additionalProperties: false
+      required: [name, slug, description, price, stock, categoryId]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 160 }
+        slug:
+          {
+            type: string,
+            pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            maxLength: 180,
+          }
+        description: { type: string, minLength: 1, maxLength: 10000 }
+        price:
+          { type: string, pattern: "^(?:0|[1-9]\\d{0,7})(?:\\.\\d{1,2})?$" }
+        stock: { type: integer, minimum: 0, maximum: 1000000 }
+        imageUrl:
+          anyOf:
+            - { type: string, format: uri, maxLength: 2048 }
+            - { type: "null" }
+            - { const: "" }
+        categoryId: { type: string, minLength: 1, maxLength: 30 }
+    ProductUpdateInput:
+      type: object
+      additionalProperties: false
+      required: [name, slug, description, price, stock, categoryId, isActive]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 160 }
+        slug:
+          {
+            type: string,
+            pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            maxLength: 180,
+          }
+        description: { type: string, minLength: 1, maxLength: 10000 }
+        price:
+          { type: string, pattern: "^(?:0|[1-9]\\d{0,7})(?:\\.\\d{1,2})?$" }
+        stock: { type: integer, minimum: 0, maximum: 1000000 }
+        imageUrl:
+          anyOf:
+            - { type: string, format: uri, maxLength: 2048 }
+            - { type: "null" }
+            - { const: "" }
+        categoryId: { type: string, minLength: 1, maxLength: 30 }
+        isActive: { type: boolean }
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: session
+      description: En production, le nom de cookie est préfixé __Host-.
+    CsrfToken:
+      type: apiKey
+      in: header
+      name: x-csrf-token
+      description: Doit correspondre au cookie CSRF reçu de /api/auth/csrf.

@@ -9,6 +9,7 @@
     "build": "npm run build --workspaces --if-present",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "format:check": "prettier --check .",
     "lint": "eslint .",
