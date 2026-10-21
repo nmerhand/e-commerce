@@ -26,6 +26,10 @@ const productSlugSchema = z
 export function createCatalogRouter(service: CatalogService) {
   const router = Router();
 
+  router.get("/categories", async (_request, response) => {
+    response.json({ categories: await service.listCategories() });
+  });
+
   router.get("/", async (request, response) => {
     const parsedQuery = listProductsSchema.safeParse(request.query);
 

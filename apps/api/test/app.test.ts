@@ -4,6 +4,7 @@ import { createApp } from "../src/app";
 import type { CatalogService } from "../src/modules/catalog/catalog.types";
 
 const app = createApp({
+  listCategories: async () => [],
   listProducts: async () => ({
     products: [],
     page: 1,

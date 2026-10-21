@@ -4,6 +4,9 @@ export function createCatalogService(
   repository: ProductRepository,
 ): CatalogService {
   return {
+    listCategories() {
+      return repository.listCategories();
+    },
     async listProducts(input) {
       const skip = (input.page - 1) * input.limit;
       const { products, total } = await repository.list({
