@@ -1,6 +1,18 @@
 import { describe, expect, it } from "vitest";
 import request from "supertest";
-import { app } from "../src/app";
+import { createApp } from "../src/app";
+import type { CatalogService } from "../src/modules/catalog/catalog.types";
+
+const app = createApp({
+  listProducts: async () => ({
+    products: [],
+    page: 1,
+    limit: 12,
+    total: 0,
+    totalPages: 0,
+  }),
+  findProductBySlug: async () => null,
+} satisfies CatalogService);
 
 describe("GET /api/health", () => {
   it("returns the API health status", async () => {
