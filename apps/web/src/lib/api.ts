@@ -1,16 +1,16 @@
-interface ApiRequestOptions {
-  method?: string;
+export interface ApiRequestOptions {
+  method?: string | undefined;
   body?: unknown;
-  signal?: AbortSignal;
-  csrfToken?: string;
+  signal?: AbortSignal | undefined;
+  csrfToken?: string | undefined;
 }
 
 const messagesByStatus: Record<number, string> = {
   400: "Vérifiez les informations saisies.",
-  401: "Adresse e-mail ou mot de passe incorrect.",
-  403: "La requête a expiré. Rechargez la page et réessayez.",
+  401: "Identifiants incorrects ou session expirée. Vérifiez puis réessayez.",
+  403: "La requête a été refusée. Rechargez la page et vérifiez vos droits.",
   404: "La ressource demandée est introuvable.",
-  409: "Un compte existe déjà pour cette adresse.",
+  409: "La ressource existe déjà ou ne peut pas être modifiée dans cet état.",
   429: "Trop de tentatives. Réessayez dans quelques minutes.",
 };
 
@@ -56,4 +56,16 @@ export async function apiRequest<T>(
   if (response.status === 204) return undefined as T;
 
   return (await response.json()) as T;
+}
+
+export async function apiRequestWithCsrf<T>(
+  url: string,
+  options: Omit<ApiRequestOptions, "csrfToken"> = {},
+) {
+  const { csrfToken } = await apiRequest<{ csrfToken: string }>(
+    "/api/auth/csrf",
+    { signal: options.signal },
+  );
+
+  return apiRequest<T>(url, { ...options, csrfToken });
 }

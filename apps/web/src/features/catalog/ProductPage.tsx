@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, fetchProduct } from "./api";
+import { useAuth } from "../auth/AuthContext";
+import { useCart } from "../cart/CartContext";
 import type { CatalogProduct } from "./types";
 
 function formatPrice(price: string) {
@@ -12,9 +14,13 @@ function formatPrice(price: string) {
 
 export function ProductPage() {
   const { slug = "" } = useParams();
+  const { user } = useAuth();
+  const { addItem } = useCart();
   const [product, setProduct] = useState<CatalogProduct | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<"not-found" | "unavailable" | null>(null);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [cartMessage, setCartMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -37,6 +43,25 @@ export function ProductPage() {
 
     return () => controller.abort();
   }, [slug]);
+
+  async function handleAddToCart() {
+    if (!product) return;
+    setAddingToCart(true);
+    setCartMessage(null);
+
+    try {
+      await addItem(product.id);
+      setCartMessage("Ajouté à votre panier.");
+    } catch (reason) {
+      setCartMessage(
+        reason instanceof Error
+          ? reason.message
+          : "Le produit n’a pas pu être ajouté.",
+      );
+    } finally {
+      setAddingToCart(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -94,9 +119,32 @@ export function ProductPage() {
               ? `En stock · ${product.stock} disponible${product.stock > 1 ? "s" : ""}`
               : "Actuellement indisponible"}
           </p>
-          <button className="button button-dark add-to-cart-button" disabled>
-            Ajouter au panier — bientôt disponible
-          </button>
+          {user ? (
+            <button
+              className="button button-dark add-to-cart-button"
+              disabled={addingToCart || product.stock < 1}
+              onClick={() => void handleAddToCart()}
+              type="button"
+            >
+              {addingToCart
+                ? "Ajout en cours…"
+                : product.stock > 0
+                  ? "Ajouter au panier"
+                  : "Indisponible"}
+            </button>
+          ) : (
+            <Link
+              className="button button-dark add-to-cart-button"
+              to="/connexion"
+            >
+              Connectez-vous pour commander
+            </Link>
+          )}
+          {cartMessage && (
+            <p className="cart-feedback" role="status">
+              {cartMessage}
+            </p>
+          )}
         </section>
       </div>
     </main>

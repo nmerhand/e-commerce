@@ -1,15 +1,10 @@
-import { apiRequest } from "../../lib/api";
+import { apiRequest, apiRequestWithCsrf } from "../../lib/api";
 import type { AuthUser } from "./types";
 
-async function requestWithCsrf<T>(path: string, body?: Record<string, string>) {
-  const { csrfToken } = await apiRequest<{ csrfToken: string }>(
-    "/api/auth/csrf",
-  );
-
-  return apiRequest<{ user: T }>(path, {
+async function requestAuth<T>(path: string, body: Record<string, string>) {
+  return apiRequestWithCsrf<{ user: T }>(path, {
     method: "POST",
     body,
-    csrfToken,
   });
 }
 
@@ -21,7 +16,7 @@ export async function loadCurrentUser(signal: AbortSignal) {
 }
 
 export async function login(email: string, password: string) {
-  const response = await requestWithCsrf<AuthUser>("/api/auth/login", {
+  const response = await requestAuth<AuthUser>("/api/auth/login", {
     email,
     password,
   });
@@ -29,7 +24,7 @@ export async function login(email: string, password: string) {
 }
 
 export async function register(email: string, name: string, password: string) {
-  const response = await requestWithCsrf<AuthUser>("/api/auth/register", {
+  const response = await requestAuth<AuthUser>("/api/auth/register", {
     email,
     name,
     password,
@@ -38,11 +33,7 @@ export async function register(email: string, name: string, password: string) {
 }
 
 export async function logout() {
-  const { csrfToken } = await apiRequest<{ csrfToken: string }>(
-    "/api/auth/csrf",
-  );
-  await apiRequest<never>("/api/auth/logout", {
+  await apiRequestWithCsrf<never>("/api/auth/logout", {
     method: "POST",
-    csrfToken,
   });
 }
