@@ -5,6 +5,7 @@ import type { ProductRepository } from "../src/modules/catalog/catalog.types";
 describe("catalog service", () => {
   it("converts page and limit to repository pagination", async () => {
     const repository: ProductRepository = {
+      listCategories: vi.fn().mockResolvedValue([]),
       list: vi.fn().mockResolvedValue({ products: [], total: 23 }),
       findBySlug: vi.fn().mockResolvedValue(null),
     };

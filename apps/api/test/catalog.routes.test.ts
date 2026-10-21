@@ -37,10 +37,31 @@ function createCatalogTestApp() {
     async (slug: string): Promise<CatalogProduct | null> =>
       slug === product.slug ? product : null,
   );
-  const service: CatalogService = { listProducts, findProductBySlug };
+  const listCategories = vi.fn(async () => [product.category]);
+  const service: CatalogService = {
+    listCategories,
+    listProducts,
+    findProductBySlug,
+  };
 
-  return { app: createApp(service), listProducts, findProductBySlug };
+  return {
+    app: createApp(service),
+    listCategories,
+    listProducts,
+    findProductBySlug,
+  };
 }
+
+describe("GET /api/products/categories", () => {
+  it("returns categories that have active products", async () => {
+    const { app, listCategories } = createCatalogTestApp();
+    const response = await request(app).get("/api/products/categories");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ categories: [product.category] });
+    expect(listCategories).toHaveBeenCalledOnce();
+  });
+});
 
 describe("GET /api/products", () => {
   it("returns a filtered page of products", async () => {

@@ -31,6 +31,14 @@ function toCatalogProduct(product: ProductRecord): CatalogProduct {
 }
 
 export class PrismaProductRepository implements ProductRepository {
+  async listCategories() {
+    return prisma.category.findMany({
+      where: { products: { some: { isActive: true } } },
+      select: { id: true, name: true, slug: true },
+      orderBy: { name: "asc" },
+    });
+  }
+
   async list(input: {
     query?: string;
     category?: string;

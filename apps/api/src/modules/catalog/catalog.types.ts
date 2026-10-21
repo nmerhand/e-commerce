@@ -13,6 +13,12 @@ export interface CatalogProduct {
   };
 }
 
+export interface CatalogCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface ListProductsInput {
   query?: string | undefined;
   category?: string | undefined;
@@ -29,11 +35,13 @@ export interface ProductList {
 }
 
 export interface CatalogService {
+  listCategories(): Promise<CatalogCategory[]>;
   listProducts(input: ListProductsInput): Promise<ProductList>;
   findProductBySlug(slug: string): Promise<CatalogProduct | null>;
 }
 
 export interface ProductRepository {
+  listCategories(): Promise<CatalogCategory[]>;
   list(input: {
     query?: string | undefined;
     category?: string | undefined;
